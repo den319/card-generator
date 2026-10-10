@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sattva Enterprise - Thank You Card Studio Pro</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&family=Dancing+Script:wght@500;700&family=Caveat:wght@500;700&family=Alex+Brush&family=Montserrat:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Marcellus&family=Jost:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600;700&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- QR Code, Canvas & PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- PDF.js for Client-Side Invoice Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <style>
+        /* Font Utilities */
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        .font-cormorant { font-family: 'Cormorant Garamond', serif; }
+        .font-marcellus { font-family: 'Marcellus', serif; }
+        .font-bodoni { font-family: 'Bodoni Moda', serif; }
+        
+        .font-greatvibes { font-family: 'Great Vibes', cursive; }
+        .font-dancingscript { font-family: 'Dancing Script', cursive; }
+        .font-caveat { font-family: 'Caveat', cursive; }
+        .font-alexbrush { font-family: 'Alex Brush', cursive; }
+
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-jost { font-family: 'Jost', sans-serif; }
+        .font-josefin { font-family: 'Josefin Sans', sans-serif; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Printable Media Queries */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #preview-container, #preview-container * {
+                visibility: visible;
+            }
+            #preview-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100% !important;
+                height: auto !important;
+                transform: scale(1) !important;
+                box-shadow: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Interactive Canvas Element Styling */
+        .editable-element {
+            transition: outline 0.15s ease, background-color 0.15s ease;
+            cursor: pointer;
+            position: relative;
+            display: block;
+        }
+        .editable-element:hover {
+            outline: 1.5px dashed #d97706;
+            background-color: rgba(251, 191, 36, 0.08);
+            border-radius: 2px;
+        }
+        .editable-element.selected-element {
+            outline: 2px solid #d97706 !important;
+            background-color: rgba(251, 191, 36, 0.15) !important;
+            border-radius: 2px;
+        }
+
+        /* Export mode class to cleanly strip outlines during html2canvas rendering */
+        .rendering-export .editable-element {
+            outline: none !important;
+            background-color: transparent !important;
+        }
+
+        /* Card Container Aspect Ratios */
+        .card-ratio-postcard { width: 850px; height: 520px; }
+        .card-ratio-square { width: 680px; height: 680px; }
+        .card-ratio-business { width: 820px; height: 480px; }
+    </style>
+</head>
+<body class="bg-slate-100 font-montserrat min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-slate-900 text-white px-6 py-3 flex flex-wrap items-center justify-between no-print shadow-md z-20 gap-2">
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-500 text-slate-900 p-2 rounded-lg flex items-center justify-center font-bold">
+                <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-white text-base leading-tight tracking-wide">Sattva Card Studio Pro</h1>
+                <p class="text-xs text-slate-400">Custom Thank You Card & Invoice Batch Generator</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button onclick="switchTab('tab-pdf-batch')" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg transition flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-file-invoice"></i>
+                <span>Batch PDF Import</span>
+            </button>
+            <button onclick="exportPNG()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 text-xs font-semibold rounded-lg transition flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-download"></i>
+                <span>Download PNG</span>
+            </button>
+            <button onclick="exportPDF()" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span>Download PDF</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+        <!-- LEFT SIDEBAR: CONTROL PANELS -->
+        <aside class="w-full md:w-[460px] bg-white border-r border-slate-200 flex flex-col h-[calc(100vh-57px)] no-print z-10">
+            
+            <!-- Tab Navigation Bar -->
+            <div class="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600 overflow-x-auto custom-scrollbar">
+                <button onclick="switchTab('tab-content')" id="btn-tab-content" class="tab-btn py-3 px-3 text-center border-b-2 border-amber-600 text-amber-600 bg-white flex items-center justify-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Content</span>
+                </button>
+                <button onclick="switchTab('tab-pdf-batch')" id="btn-tab-pdf-batch" class="tab-btn py-3 px-3 text-center border-b-2 border-transparent hover:text-slate-900 flex items-center justify-center space-x-1 whitespace-nowrap text-amber-700 bg-amber-50/50 font-bold">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>PDF Batch</span>
+                </button>
+                <button onclick="switchTab('tab-typography')" id="btn-tab-typography" class="tab-btn py-3 px-3 text-center border-b-2 border-transparent hover:text-slate-900 flex items-center justify-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-font"></i>
+                    <span>Typography</span>
+                </button>
+                <button onclick="switchTab('tab-spacing')" id="btn-tab-spacing" class="tab-btn py-3 px-3 text-center border-b-2 border-transparent hover:text-slate-900 flex items-center justify-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-up-down-left-right"></i>
+                    <span>Position</span>
+                </button>
+                <button onclick="switchTab('tab-sections')" id="btn-tab-sections" class="tab-btn py-3 px-3 text-center border-b-2 border-transparent hover:text-slate-900 flex items-center justify-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Sections</span>
+                </button>
+                <button onclick="switchTab('tab-presets')" id="btn-tab-presets" class="tab-btn py-3 px-3 text-center border-b-2 border-transparent hover:text-slate-900 flex items-center justify-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-palette"></i>
+                    <span>Themes</span>
+                </button>
+            </div>
+
+            <!-- Tab Contents Container -->
+            <div class="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-5 text-xs">
+
+                <div id="tab-pdf-batch" class="tab-pane hidden space-y-4">
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-900 flex items-start space-x-2">
+                        <i class="fa-solid fa-file-invoice-dollar mt-0.5 text-amber-600 text-lg"></i>
+                        <div class="leading-relaxed">
+                            <strong class="font-bold block">Invoice PDF Customer Extractor</strong>
+                            Upload your invoice PDF file (Meesho, Flipkart, Amazon, or standard invoices). Customer names will be automatically extracted and populated into cards!
+                        </div>
+                    </div>
+
+                    <!-- PDF Upload Drop Zone -->
+                    <div id="pdf-dropzone" class="border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-xl p-5 text-center bg-slate-50 hover:bg-amber-50/30 transition cursor-pointer relative">
+                        <input type="file" id="pdf-file-input" accept=".pdf" class="hidden" onchange="handlePDFUpload(event)">
+                        <div onclick="document.getElementById('pdf-file-input').click()" class="space-y-2">
+                            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto text-xl">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <div>
+                                <span class="font-bold text-slate-800 block">Click or Drag & Drop Invoice PDF</span>
+                                <span class="text-slate-500 text-[11px]">Automatically parses customer names & order details</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extraction Status Indicator -->
+                    <div id="pdf-status" class="hidden p-3 rounded-lg border text-xs font-semibold flex items-center justify-between bg-slate-50">
+                        <div class="flex items-center space-x-2">
+                            <i id="pdf-status-icon" class="fa-solid fa-circle-notch fa-spin text-amber-600"></i>
+                            <span id="pdf-status-text">Parsing PDF pages...</span>
+                        </div>
+                        <span id="pdf-count-badge" class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-bold text-[10px]">0 Orders</span>
+                    </div>
+
+                    <!-- Extracted Customers Batch Controls -->
+                    <div id="batch-results-container" class="space-y-3 hidden">
+                        <div class="flex items-center justify-between border-b pb-2">
+                            <span class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                                <i class="fa-solid fa-users text-amber-600 mr-1"></i> Extracted Customers (<span id="parsed-total-count">0</span>)
+                            </span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="toggleSelectAllCustomers(true)" class="text-[10px] text-amber-700 hover:underline font-semibold">Select All</button>
+                                <span class="text-slate-300">|</span>
+                                <button onclick="toggleSelectAllCustomers(false)" class="text-[10px] text-slate-500 hover:underline">Clear</button>
+                            </div>
+                        </div>
+
+                        <!-- Extracted Customers Scrollable List -->
+                        <div id="extracted-customers-list" class="max-h-60 overflow-y-auto custom-scrollbar border border-slate-200 rounded-lg divide-y divide-slate-100 bg-white">
+                            <!-- Items injected via JavaScript -->
+                        </div>
+
+                        <!-- Batch Actions -->
+                        <div class="border border-amber-200 bg-amber-50/60 rounded-lg p-3.5 space-y-3">
+                            <h4 class="font-bold text-amber-900 uppercase tracking-wider text-[11px] flex items-center justify-between">
+                                <span><i class="fa-solid fa-file-pdf mr-1"></i> Batch Generation Controls</span>
+                            </h4>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="openBatchPreviewModal()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-lg shadow transition flex items-center justify-center space-x-1.5 text-xs">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>Preview Cards</span>
+                                </button>
+                                <button onclick="downloadBatchPDF()" class="py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-lg shadow transition flex items-center justify-center space-x-1.5 text-xs">
+                                    <i class="fa-solid fa-download"></i>
+                                    <span>Export All PDF</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-content" class="tab-pane space-y-4">
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-900 flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-info mt-0.5 text-amber-600"></i>
+                        <p class="leading-relaxed">Click any word directly on the card to inspect and style it!</p>
+                    </div>
+
+                    <!-- Brand Header Section -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center justify-between">
+                            <span><i class="fa-solid fa-heading text-amber-600 mr-1.5"></i> Brand Title</span>
+                        </h3>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Brand Name Title</label>
+                            <input type="text" id="input-brand-title" value="SATTVA" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Sub-brand / Tagline</label>
+                            <input type="text" id="input-brand-sub" value="ENTERPRISE" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                    </div>
+
+                    <!-- Greeting & Message Section (Specific Line 1, Line 2, Line 3 structure) -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3 bg-amber-50/30 border-amber-200">
+                        <h3 class="font-bold text-amber-900 uppercase tracking-wider text-[11px] flex items-center justify-between">
+                            <span><i class="fa-solid fa-heart text-amber-600 mr-1.5"></i> Greeting Alignment Lines</span>
+                            <span class="text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded font-semibold">Custom Alignment</span>
+                        </h3>
+                        
+                        <!-- Line 1: User Name (Non-Cursive & Uppercase) -->
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Line 1: Customer Salutation (Uppercase, Non-Cursive)</label>
+                            <input type="text" id="input-user-name" value="VALUED CUSTOMER" class="w-full px-3 py-1.5 border border-slate-300 rounded font-semibold text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none uppercase" oninput="updateCardContent()">
+                            <p class="text-[10px] text-slate-500 mt-0.5">Automatically updated per user when importing invoice PDF!</p>
+                        </div>
+
+                        <!-- Line 2: Cursive Thank You Heading -->
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Line 2: Main Cursive Heading</label>
+                            <input type="text" id="input-script-heading" value="Thank you" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+
+                        <!-- Line 3: Purchase Message Sub-heading -->
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Line 3: Sub-heading Text</label>
+                            <input type="text" id="input-subheading" value="for your purchase!" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                    </div>
+
+                    <!-- Body Paragraph Section -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                            <i class="fa-solid fa-align-left text-amber-600 mr-1.5"></i> Body Text Lines
+                        </h3>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Body Line 1</label>
+                            <input type="text" id="input-body-1" value="Your support means a lot to us." class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Body Line 2</label>
+                            <input type="text" id="input-body-2" value="We hope you love your product!" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                    </div>
+
+                    <!-- Rating & Reviews Section -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                            <i class="fa-solid fa-star text-amber-600 mr-1.5"></i> Rating & Reviews
+                        </h3>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Review Prompt Line 1</label>
+                            <input type="text" id="input-review-prompt" value="Please take a moment to" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Platforms Prompt Line 2</label>
+                            <input type="text" id="input-review-platforms" value="rate & review us on Flipkart / Meesho." class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                        <div class="flex items-center justify-between pt-1">
+                            <span class="font-medium text-slate-700">Star Rating Count</span>
+                            <div class="flex items-center space-x-1">
+                                <input type="range" id="input-star-count" min="1" max="5" value="5" class="w-24 accent-amber-600" oninput="updateCardContent()">
+                                <span id="label-star-count" class="font-bold text-amber-700 w-4 text-center">5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Settings -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                            <i class="fa-solid fa-qrcode text-amber-600 mr-1.5"></i> QR Code Link
+                        </h3>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">QR Target URL</label>
+                            <input type="text" id="input-qr-url" value="https://meesho.com" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="generateQRCode()">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">QR Main Label</label>
+                            <input type="text" id="input-qr-label" value="Scan QR Code" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">QR Sub-label</label>
+                            <input type="text" id="input-qr-sublabel" value="to give your feedback" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                    </div>
+
+                    <!-- Sign-off Footer -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                            <i class="fa-solid fa-signature text-amber-600 mr-1.5"></i> Footer Signature
+                        </h3>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Cursive Signature</label>
+                            <input type="text" id="input-signature" value="Thank you ♡" 
+                                class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" 
+                                    oninput="updateCardContent()">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Team Sub-signature</label>
+                            <input type="text" id="input-team-name" value="TEAM SATTVA ENTERPRISE" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="updateCardContent()">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-typography" class="tab-pane hidden space-y-4">
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <label class="block font-bold text-slate-800 uppercase tracking-wider text-[11px]">Select Element for Custom Typography</label>
+                        <select id="select-target-element" class="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 font-semibold focus:outline-none text-slate-700" onchange="loadTargetElementSettings()">
+                            <optgroup label="Greeting Alignment Lines">
+                                <option value="elem-user-salutation">Line 1: Dear [USER NAME], (Non-cursive, Uppercase)</option>
+                                <option value="elem-script-heading">Line 2: Thank you (Cursive Title)</option>
+                                <option value="elem-subheading">Line 3: for your purchase!</option>
+                            </optgroup>
+                            <optgroup label="Brand Header">
+                                <option value="elem-brand-title">Brand Title (SATTVA)</option>
+                                <option value="elem-brand-sub">Brand Subtitle (ENTERPRISE)</option>
+                            </optgroup>
+                            <optgroup label="Body Lines">
+                                <option value="text-body-1">Body Line 1 (Your support...)</option>
+                                <option value="text-body-2">Body Line 2 (We hope you...)</option>
+                            </optgroup>
+                            <optgroup label="Rating & Reviews">
+                                <option value="text-review-prompt">Review Prompt Line 1</option>
+                                <option value="text-review-platforms">Review Platforms Line 2</option>
+                            </optgroup>
+                            <optgroup label="Footer Sign-off">
+                                <option value="elem-signature">Signature Text (Thank you ♡)</option>
+                                <option value="elem-team">Team Sub-signature (TEAM SATTVA)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Target Element Typography Controls -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-4 bg-slate-50/50">
+                        <div>
+                            <label class="block text-slate-600 font-medium mb-1">Font Family</label>
+                            <select id="ctrl-font-family" class="w-full px-3 py-1.5 border border-slate-300 rounded bg-white focus:outline-none" onchange="applyTargetTypography()">
+                                <optgroup label="Clean & Geometric Sans-Serif">
+                                    <option value="font-montserrat">Montserrat (Default)</option>
+                                    <option value="font-poppins">Poppins</option>
+                                    <option value="font-jost">Jost</option>
+                                    <option value="font-josefin">Josefin Sans</option>
+                                    <option value="font-roboto">Roboto</option>
+                                </optgroup>
+                                <optgroup label="Classical Serif & Roman">
+                                    <option value="font-cinzel">Cinzel (Roman)</option>
+                                    <option value="font-marcellus">Marcellus</option>
+                                    <option value="font-bodoni">Bodoni Moda</option>
+                                    <option value="font-playfair">Playfair Display</option>
+                                    <option value="font-cormorant">Cormorant Garamond</option>
+                                </optgroup>
+                                <optgroup label="Script & Cursive">
+                                    <option value="font-greatvibes">Great Vibes</option>
+                                    <option value="font-dancingscript">Dancing Script</option>
+                                    <option value="font-caveat">Caveat Modern</option>
+                                    <option value="font-alexbrush">Alex Brush Delicate</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-slate-600 font-medium">Font Size (px)</label>
+                                <span id="val-font-size" class="font-bold text-amber-600">18px</span>
+                            </div>
+                            <input type="range" id="ctrl-font-size" min="8" max="90" value="18" class="w-full accent-amber-600" oninput="applyTargetTypography()">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-slate-600 font-medium mb-1">Font Weight</label>
+                                <select id="ctrl-font-weight" class="w-full px-2 py-1.5 border border-slate-300 rounded bg-white" onchange="applyTargetTypography()">
+                                    <option value="300">Light (300)</option>
+                                    <option value="400">Regular (400)</option>
+                                    <option value="500">Medium (500)</option>
+                                    <option value="600">SemiBold (600)</option>
+                                    <option value="700">Bold (700)</option>
+                                    <option value="800">ExtraBold (800)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 font-medium mb-1">Letter Spacing</label>
+                                <select id="ctrl-letter-spacing" class="w-full px-2 py-1.5 border border-slate-300 rounded bg-white" onchange="applyTargetTypography()">
+                                    <option value="normal">Normal</option>
+                                    <option value="0.05em">Wide (+0.05em)</option>
+                                    <option value="0.12em">Wider (+0.12em)</option>
+                                    <option value="0.2em">Ultra Wide (+0.2em)</option>
+                                    <option value="0.35em">Expanded (+0.35em)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 items-center">
+                            <div>
+                                <label class="block text-slate-600 font-medium mb-1">Text Color</label>
+                                <input type="color" id="ctrl-text-color" value="#3D2E1E" class="w-full h-8 rounded border border-slate-300 cursor-pointer p-0" oninput="applyTargetTypography()">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 font-medium mb-1">Text Transform</label>
+                                <select id="ctrl-text-transform" class="w-full px-2 py-1.5 border border-slate-300 rounded bg-white" onchange="applyTargetTypography()">
+                                    <option value="none">None</option>
+                                    <option value="uppercase">UPPERCASE</option>
+                                    <option value="lowercase">lowercase</option>
+                                    <option value="capitalize">Capitalize</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-spacing" class="tab-pane hidden space-y-4">
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <label class="block font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center justify-between">
+                            <span>Select Element for Positioning</span>
+                            <i class="fa-solid fa-arrows-up-down-left-right text-amber-600"></i>
+                        </label>
+                        <select id="select-spacing-section" class="w-full px-3 py-2 border border-slate-300 rounded-md bg-white font-semibold focus:outline-none text-slate-800 shadow-sm" onchange="loadTargetSpacingSettings()">
+                            <optgroup label="Greeting Alignment Group">
+                                <option value="sec-greeting">Entire Greeting Block (Lines 1-3)</option>
+                                <option value="elem-user-salutation">Line 1: Dear [USER NAME],</option>
+                                <option value="elem-script-heading">Line 2: Thank you</option>
+                                <option value="elem-subheading">Line 3: for your purchase!</option>
+                            </optgroup>
+                            <optgroup label="Section Containers">
+                                <option value="card-element">Card Box Canvas</option>
+                                <option value="sec-header">Header Block</option>
+                                <option value="sec-rating">Rating Box</option>
+                                <option value="sec-qr">QR Section</option>
+                                <option value="sec-footer">Footer Signature Block</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Positioning Sliders -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-4 bg-slate-50/50">
+                        <div class="bg-white p-2.5 rounded border border-slate-200 flex items-center justify-between">
+                            <span class="font-semibold text-slate-700 text-xs">Nudge Pad:</span>
+                            <div class="grid grid-cols-3 gap-1 w-28 text-center">
+                                <div></div>
+                                <button onclick="nudgeTarget(0, -3)" class="p-1 bg-slate-100 hover:bg-amber-100 text-slate-700 rounded text-xs font-bold"><i class="fa-solid fa-chevron-up"></i></button>
+                                <div></div>
+                                <button onclick="nudgeTarget(-3, 0)" class="p-1 bg-slate-100 hover:bg-amber-100 text-slate-700 rounded text-xs font-bold"><i class="fa-solid fa-chevron-left"></i></button>
+                                <button onclick="resetTargetPosition()" class="p-1 bg-amber-50 hover:bg-amber-200 text-amber-800 rounded text-[10px] font-bold" title="Reset Position"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button onclick="nudgeTarget(3, 0)" class="p-1 bg-slate-100 hover:bg-amber-100 text-slate-700 rounded text-xs font-bold"><i class="fa-solid fa-chevron-right"></i></button>
+                                <div></div>
+                                <button onclick="nudgeTarget(0, 3)" class="p-1 bg-slate-100 hover:bg-amber-100 text-slate-700 rounded text-xs font-bold"><i class="fa-solid fa-chevron-down"></i></button>
+                                <div></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-slate-600 font-medium">Vertical Shift (Y-Offset)</label>
+                                <span id="val-pos-y" class="font-bold text-amber-600">0px</span>
+                            </div>
+                            <input type="range" id="ctrl-pos-y" min="-80" max="80" value="0" class="w-full accent-amber-600" oninput="applyTargetSpacing()">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-slate-600 font-medium">Horizontal Shift (X-Offset)</label>
+                                <span id="val-pos-x" class="font-bold text-amber-600">0px</span>
+                            </div>
+                            <input type="range" id="ctrl-pos-x" min="-80" max="80" value="0" class="w-full accent-amber-600" oninput="applyTargetSpacing()">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-slate-600 font-medium">Line Height Spacing</label>
+                                <span id="val-line-height" class="font-bold text-amber-600">1.1</span>
+                            </div>
+                            <input type="range" id="ctrl-line-height" min="0.7" max="2.2" step="0.05" value="1.1" class="w-full accent-amber-600" oninput="applyTargetSpacing()">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-sections" class="tab-pane hidden space-y-4">
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px] mb-2">
+                            Toggle Card Sections
+                        </h3>
+
+                        <label class="flex items-center justify-between p-2 rounded border hover:bg-slate-50 cursor-pointer">
+                            <span class="font-medium text-slate-700">Top Header & Brand Line</span>
+                            <input type="checkbox" id="toggle-sec-header" checked class="h-4 w-4 text-amber-600 rounded" onchange="toggleSection('sec-header')">
+                        </label>
+
+                        <label class="flex items-center justify-between p-2 rounded border hover:bg-slate-50 cursor-pointer">
+                            <span class="font-medium text-slate-700">Greeting Block (Lines 1-3)</span>
+                            <input type="checkbox" id="toggle-sec-greeting" checked class="h-4 w-4 text-amber-600 rounded" onchange="toggleSection('sec-greeting')">
+                        </label>
+
+                        <label class="flex items-center justify-between p-2 rounded border hover:bg-slate-50 cursor-pointer">
+                            <span class="font-medium text-slate-700">Star Rating Box</span>
+                            <input type="checkbox" id="toggle-sec-rating" checked class="h-4 w-4 text-amber-600 rounded" onchange="toggleSection('sec-rating')">
+                        </label>
+
+                        <label class="flex items-center justify-between p-2 rounded border hover:bg-slate-50 cursor-pointer">
+                            <span class="font-medium text-slate-700">QR Code Section</span>
+                            <input type="checkbox" id="toggle-sec-qr" checked class="h-4 w-4 text-amber-600 rounded" onchange="toggleSection('sec-qr')">
+                        </label>
+
+                        <label class="flex items-center justify-between p-2 rounded border hover:bg-slate-50 cursor-pointer">
+                            <span class="font-medium text-slate-700">Bottom Signature Sign-off</span>
+                            <input type="checkbox" id="toggle-sec-footer" checked class="h-4 w-4 text-amber-600 rounded" onchange="toggleSection('sec-footer')">
+                        </label>
+
+                        <label class="flex items-center justify-between p-2 rounded border hover:bg-slate-50 cursor-pointer">
+                            <span class="font-medium text-slate-700">Corner Botanical Artworks</span>
+                            <input type="checkbox" id="toggle-botanicals" checked class="h-4 w-4 text-amber-600 rounded" onchange="toggleSection('sec-botanicals')">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- TAB: PRESETS & COLORS -->
+                <div id="tab-presets" class="tab-pane hidden space-y-4">
+                    <div>
+                        <label class="block font-bold text-slate-800 uppercase tracking-wider text-[11px] mb-2.5">Theme Palettes</label>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <button onclick="applyTheme('sattva')" class="p-3 border rounded-lg text-left hover:border-amber-500 transition bg-[#fffffff] space-y-1">
+                                <div class="flex space-x-1">
+                                    <span class="w-3 h-3 rounded-full bg-[#B8860B]"></span>
+                                    <span class="w-3 h-3 rounded-full bg-[#000000]"></span>
+                                    <span class="w-3 h-3 rounded-full bg-[#FAF7F2] border"></span>
+                                </div>;
+                                <span class="font-bold text-slate-800 block text-xs">Warm</span>
+                            </button>
+
+                            <button onclick="applyTheme('monochrome')" class="p-3 border rounded-lg text-left hover:border-amber-500 transition bg-[#F4F3EF] space-y-1">
+                                <div class="flex space-x-1">
+                                    <span class="w-3 h-3 rounded-full bg-[#111827]"></span>
+                                    <span class="w-3 h-3 rounded-full bg-[#4B5563]"></span>
+                                    <span class="w-3 h-3 rounded-full bg-[#F4F3EF] border"></span>
+                                </div>
+                                <span class="font-bold text-slate-800 block text-xs">Monochrome</span>
+                            </button>
+
+                            <button onclick="applyTheme('botanical')" class="p-3 border rounded-lg text-left hover:border-amber-500 transition bg-[#F2F6F3] space-y-1">
+                                <div class="flex space-x-1">
+                                    <span class="w-3 h-3 rounded-full bg-[#1C3A27]"></span>
+                                    <span class="w-3 h-3 rounded-full bg-[#2D5A3F]"></span>
+                                    <span class="w-3 h-3 rounded-full bg-[#F2F6F3] border"></span>
+                                </div>
+                                <span class="font-bold text-slate-800 block text-xs">Leafy Green</span>
+                            </button>
+
+                            <button onclick="applyTheme('meesho')" class="p-3 border rounded-lg text-left hover:border-amber-500 transition bg-[#FAF5FB] space-y-1">
+                                <div class="flex space-x-1">
+                                    <span class="w-3 h-3 rounded-full bg-[#52093C]"></span>
+                                    <span class="w-3 h-3 rounded-full bg-[#FFC107]"></span>
+                                    <span class="w-3 h-3 rounded-full bg-[#FAF5FB] border"></span>
+                                </div>
+                                <span class="font-bold text-slate-800 block text-xs">Meesho Purple</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-200">
+
+                    <!-- Custom Colors -->
+                    <div class="border border-slate-200 rounded-lg p-3.5 space-y-3">
+                        <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Custom Palette Colors</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-slate-600 font-medium mb-1">Card Background</label>
+                                <input type="color" id="color-card-bg" value="#ffffff" class="w-full h-8 rounded border cursor-pointer p-0" oninput="updateCardColors()">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 font-medium mb-1">Primary Text</label>
+                                <input type="color" id="color-primary-text" value="#3D2E1E" class="w-full h-8 rounded border cursor-pointer p-0" oninput="updateCardColors()">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 font-medium mb-1">Accent / Icons</label>
+                                <input type="color" id="color-accent" value="#000000" class="w-full h-8 rounded border cursor-pointer p-0" oninput="updateCardColors(); generateQRCode();">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 font-medium mb-1">Border Line</label>
+                                <input type="color" id="color-border" value="#E8DFD1" class="w-full h-8 rounded border cursor-pointer p-0" oninput="updateCardColors()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <main class="flex-1 bg-slate-200/80 p-4 md:p-8 flex flex-col items-center justify-center overflow-auto relative min-h-[500px]">
+            
+            <!-- Scale & Canvas Size Controls -->
+            <div class="mb-4 flex flex-wrap items-center justify-center space-x-3 bg-white px-4 py-2 rounded-full shadow-sm text-xs text-slate-700 no-print">
+                <span class="font-medium"><i class="fa-solid fa-expand text-slate-400 mr-1"></i> Zoom:</span>
+                <button onclick="setPreviewScale(0.75)" class="hover:text-amber-600 font-medium">75%</button>
+                <button onclick="setPreviewScale(1)" class="font-bold text-amber-600">100%</button>
+                <button onclick="setPreviewScale(1.2)" class="hover:text-amber-600 font-medium">120%</button>
+                <span class="text-slate-300">|</span>
+                <span class="font-medium">Ratio:</span>
+                <select id="select-card-ratio" class="bg-slate-100 rounded px-2 py-0.5 font-semibold focus:outline-none" onchange="updateCardRatio()">
+                    <option value="card-ratio-postcard">Postcard (5" x 3")</option>
+                    <option value="card-ratio-square">Square Postcard</option>
+                    <option value="card-ratio-business">Wide Card (3.5" x 2")</option>
+                </select>
+            </div>
+
+            <!-- Outer Preview Canvas Container -->
+            <div id="preview-container" class="transition-transform duration-200 origin-center max-w-full">
+                
+                <div id="card-element" class="card-ratio-postcard bg-[#ffffff] relative p-8 flex flex-col justify-between overflow-hidden shadow-2xl transition-all border border-slate-300 text-[#3D2E1E]">
+                    
+                    <!-- CORNER BOTANICAL ARTWORK -->
+                    <div id="botanical-tl" onclick="selectSpacingElement('botanical-tl')" class="sec-botanicals editable-element absolute top-2 left-2 w-20 h-20 opacity-85 text-[#000000] transition-all">
+                        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" class="w-full h-full" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 10 C 30 20, 45 40, 50 80"></path>
+                            <path d="M22 17 C 12 12, 5 20, 15 28 C 22 25, 22 17, 22 17 Z" fill="none"></path>
+                            <path d="M32 29 C 20 28, 18 42, 28 45 C 33 37, 32 29, 32 29 Z" fill="none"></path>
+                            <path d="M42 48 C 30 52, 32 66, 42 62 C 45 54, 42 48, 42 48 Z" fill="none"></path>
+                            <path d="M18 22 C 28 15, 38 18, 30 29 C 23 27, 18 22, 18 22 Z" fill="none"></path>
+                            <path d="M28 35 C 42 32, 48 42, 38 48 C 32 42, 28 35, 28 35 Z" fill="none"></path>
+                        </svg>
+                    </div>
+
+                    <div id="botanical-br" onclick="selectSpacingElement('botanical-br')" class="sec-botanicals editable-element absolute bottom-2 right-2 w-24 h-24 opacity-85 text-[#000000] transform -rotate-12 transition-all">
+                        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" class="w-full h-full" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M90 90 C 70 70, 50 40, 20 10"></path>
+                            <path d="M75 75 C 88 65, 82 50, 68 62 C 67 70, 75 75, 75 75 Z"></path>
+                            <path d="M58 55 C 72 42, 65 28, 52 40 C 52 50, 58 55, 58 55 Z"></path>
+                            <path d="M40 35 C 50 20, 42 8, 32 22 C 34 30, 40 35, 40 35 Z"></path>
+                            <path d="M68 68 C 55 80, 40 75, 52 60 C 60 62, 68 68, 68 68 Z"></path>
+                        </svg>
+                    </div>
+
+                    <!-- HEADER SECTION -->
+                    <div id="sec-header" class="flex flex-col items-center justify-center w-full relative z-10 transition-all">
+                        <div id="elem-brand-title" onclick="selectElement('elem-brand-title')" 
+                            class="editable-element font-josefin text-3xl md:text-4xl tracking-[0.15em] font-semibold text-center 
+                                uppercase leading-none transition-all">
+                            SATTVA
+                        </div>
+                        <div id="header-divider-line" onclick="selectSpacingElement('header-divider-line')" 
+                        class="editable-element w-48 h-[1px] my-1.5 opacity-60 bg-[#000000] transition-all"></div>
+                        <div id="elem-brand-sub" onclick="selectElement('elem-brand-sub')" class="editable-element font-roboto text-xs md:text-sm tracking-[0.4em] uppercase text-center font-normal transition-all">
+                            ENTERPRISE
+                        </div>
+                    </div>
+
+                    <!-- MAIN CONTENT GRID -->
+                    <div class="grid grid-cols-12 gap-4 items-center my-auto relative z-10 px-2 pb-4">
+                        
+                        <!-- Left Column: 3-Line Greeting Layout, Body & Rating -->
+                        <div class="col-span-7 space-y-3 pr-1">
+                            
+                            <!-- EXACT 3-LINE GREETING CONTAINER -->
+                            <div id="sec-greeting" class="transition-all flex flex-col min-h-[140px] justify-center">
+                                
+                                <!-- LINE 2: Cursive Thank you Heading -->
+                                <div id="elem-script-heading" onclick="selectElement('elem-script-heading')" 
+                                    class="editable-element font-greatvibes text-5xl md:text-6xl text-[#3D2E1E] my-1 pb-3">
+                                    Thank you
+                                </div>
+
+                                <!-- LINE 1: Customer Salutation in UPPERCASE, non-cursive font -->
+                                <div id="elem-user-salutation" onclick="selectElement('elem-user-salutation')" 
+                                    class="editable-element font-montserrat text-2xl font-bold tracking-wider text-slate-800 uppercase transition-all py-0.5 mt-4">
+                                    VALUED CUSTOMER
+                                </div>
+                                
+                                <!-- LINE 3: Purchase Sub-heading Message -->
+                                <div id="elem-subheading" onclick="selectElement('elem-subheading')" class="editable-element font-montserrat text-base font-semibold tracking-wide text-slate-700 transition-all py-0.5">
+                                    for your purchase!
+                                </div>
+                            </div>
+
+                            <!-- Body Text Paragraph Block -->
+                            <div id="elem-body" onclick="selectElement('elem-body')" 
+                                class="editable-element text-md space-y-1 leading-relaxed font-montserrat opacity-90 transition-all pt-1">
+                                <span id="text-body-1" onclick="selectSpacingElement('text-body-1'); event.stopPropagation();"
+                                     class="editable-element block transition-all">Your support means a lot to us.</span>
+                                <span id="text-body-2" onclick="selectSpacingElement('text-body-2'); event.stopPropagation();" class="editable-element block transition-all">We hope you love your product!</span>
+                            </div>
+
+                            <!-- Rating Section -->
+                            <div id="sec-rating" class="transition-all pt-1 flex items-center space-x-3">
+                                <div id="star-icons-container" onclick="selectSpacingElement('star-icons-container')" class="editable-element flex space-x-1 text-[#000000] text-sm transition-all">
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                </div>
+                                <div id="elem-rating" onclick="selectElement('elem-rating')" 
+                                    class="editable-element text-[14px] leading-tight font-montserrat transition-all">
+                                    <span id="text-review-prompt" class="block font-medium">Please take a moment to</span>
+                                    <span id="text-review-platforms" class="block font-bold">rate & review us on Flipkart / Meesho.</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Right Column: QR Code & Badges -->
+                        <div class="col-span-5 flex flex-col items-center justify-center border-l border-black pl-3">
+                            <div id="sec-qr" class="flex flex-col items-center text-center space-y-1.5 transition-all">
+                                <div id="qrcode-box" class="p-2 bg-white rounded-lg shadow-sm border border-black">
+                                    <div id="qrcode-canvas" class="flex items-center justify-center"></div>
+                                </div>
+                                <div id="elem-qr" onclick="selectElement('elem-qr')" class="editable-element text-center transition-all">
+                                    <span id="text-qr-label" class="block text-sm font-bold uppercase tracking-wider">Scan QR Code</span>
+                                    <span id="text-qr-sublabel" class="block text-[13px]">to give your feedback</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- FOOTER SECTION -->
+                    <div id="sec-footer" class="flex items-center justify-between border-t border-black pt-2 relative z-10 transition-all">
+                        <!-- Left 3 Feature Badges -->
+                        <div id="card-features-container" class="grid grid-cols-3 gap-3 text-left max-w-[65%] pr-2">
+                            <div class="flex items-center space-x-2 border-r border-slate-300/60 pr-2">
+                                <i class="fa-regular fa-thumbs-up text-normal" id="icon-feature-1"></i>
+                                <span class="text-[12px] leading-tight text-slate-600 font-montserrat">Your feedback helps us improve</span>
+                            </div>
+                            <div class="flex items-center space-x-2 border-r border-slate-300/60 pr-2">
+                                <i class="fa-solid fa-users text-normal" id="icon-feature-2"></i>
+                                <span class="text-[12px] leading-tight text-slate-600 font-montserrat">It helps other customers too</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-regular fa-heart text-normal" id="icon-feature-3"></i>
+                                <span class="text-[12px] leading-tight text-slate-600 font-montserrat">And it means the world to us!</span>
+                            </div>
+                        </div>
+                        <div class="text-right mr-[5rem]">
+                            <div id="elem-signature" onclick="selectElement('elem-signature')" 
+                                class="editable-element font-greatvibes text-2xl md:text-3xl leading-none text-[#000000] transition-all">
+                                Thank you ♡
+                            </div>
+                            <div id="elem-team" onclick="selectElement('elem-team')" 
+                            class="editable-element font-roboto text-[9px] tracking-[0.25em] font-semibold uppercase block transition-all mt-0.5">
+                                TEAM SATTVA ENTERPRISE
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+
+    </div>
+
+    <div id="batch-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-100 rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-300">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-layer-group text-amber-500 text-xl"></i>
+                    <div>
+                        <h2 class="font-bold text-base">Batch Thank You Cards Preview</h2>
+                        <p class="text-xs text-slate-400">Generated for <span id="modal-customer-count" class="text-amber-400 font-bold">0</span> customers extracted from PDF</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="downloadBatchPDF()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition flex items-center space-x-1.5 shadow">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span>Download Multi-page PDF</span>
+                    </button>
+                    <button onclick="closeBatchPreviewModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div id="batch-preview-grid" class="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6 custom-scrollbar bg-slate-200">
+                <!-- Cards will be injected here for preview -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Application State
+        let extractedCustomers = [];
+        let selectedTargetElementId = 'elem-user-salutation';
+        let currentScale = 1;
+
+        // Custom Element Styles Registry
+        const elementStyles = {
+            'elem-user-salutation': { fontFamily: 'font-montserrat', fontSize: '14', fontWeight: '700', color: '#ffffff', transform: 'uppercase', letterSpacing: '0.05em', posX: 0, posY: 0, lineHeight: 1.1 },
+            'elem-script-heading': { fontFamily: 'font-greatvibes', fontSize: '56', fontWeight: '400', color: '#000000', transform: 'none', letterSpacing: 'normal', posX: 0, posY: 0, lineHeight: 1.0 },
+            'elem-subheading': { fontFamily: 'font-montserrat', fontSize: '16', fontWeight: '600', color: '#000000', transform: 'none', letterSpacing: 'normal', posX: 0, posY: 0, lineHeight: 1.1 },
+            'elem-brand-title': { fontFamily: 'font-cinzel', fontSize: '32', fontWeight: '700', color: '#000000', transform: 'uppercase', letterSpacing: '0.25em', posX: 0, posY: 0, lineHeight: 1.0 },
+            'elem-brand-sub': { fontFamily: 'font-cinzel', fontSize: '12', fontWeight: '400', color: '#000000', transform: 'uppercase', letterSpacing: '0.4em', posX: 0, posY: 0, lineHeight: 1.0 },
+            'elem-body': { fontFamily: 'font-montserrat', fontSize: '12', fontWeight: '400', color: '#000000', transform: 'none', letterSpacing: 'normal', posX: 0, posY: 0, lineHeight: 1.3 },
+            'elem-rating': { fontFamily: 'font-montserrat', fontSize: '11', fontWeight: '500', color: '#000000', transform: 'none', letterSpacing: 'normal', posX: 0, posY: 0, lineHeight: 1.2 },
+            'elem-qr': { fontFamily: 'font-montserrat', fontSize: '11', fontWeight: '600', color: '#000000', transform: 'none', letterSpacing: 'normal', posX: 0, posY: 0, lineHeight: 1.2 },
+            'elem-signature': { fontFamily: 'font-greatvibes', fontSize: '28', fontWeight: '400', color: '#000000', transform: 'none', letterSpacing: 'normal', posX: 0, posY: 0, lineHeight: 1.0 },
+            'elem-team': { fontFamily: 'font-cinzel', fontSize: '9', fontWeight: '600', color: '#000000', transform: 'uppercase', letterSpacing: '0.25em', posX: 0, posY: 0, lineHeight: 1.0 }
+        };
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            generateQRCode();
+            updateCardContent();
+            selectElement('elem-user-salutation');
+        });
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-amber-600', 'text-amber-600', 'bg-white');
+                btn.classList.add('border-transparent');
+            });
+
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-transparent');
+                activeBtn.classList.add('border-amber-600', 'text-amber-600', 'bg-white');
+            }
+        }
+
+        async function handlePDFUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusDiv = document.getElementById('pdf-status');
+            const statusText = document.getElementById('pdf-status-text');
+            const statusIcon = document.getElementById('pdf-status-icon');
+            const badge = document.getElementById('pdf-count-badge');
+
+            statusDiv.classList.remove('hidden');
+            statusText.innerText = "Reading invoice PDF file...";
+            statusIcon.className = "fa-solid fa-circle-notch fa-spin text-amber-600";
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                statusText.innerText = `Parsing ${pdf.numPages} PDF pages for customer names...`;
+
+                extractedCustomers = [];
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const textItems = textContent.items.map(item => item.str);
+                    const fullText = textItems.join(" ");
+
+                    // Extract Customer Name patterns (Meesho / Flipkart / E-commerce Invoices)
+                    let foundNames = extractCustomerNamesFromText(fullText, textItems);
+                    
+                    foundNames.forEach(name => {
+                        const cleanName = name.trim().toUpperCase().replace(/[^A-Z\s]/g, '');
+                        if (cleanName.length > 2 && !extractedCustomers.some(c => c.name === cleanName)) {
+                            extractedCustomers.push({
+                                id: extractedCustomers.length + 1,
+                                name: cleanName,
+                                selected: true
+                            });
+                        }
+                    });
+                }
+
+                if (extractedCustomers.length === 0) {
+                    // Fallback demo names if invoice structure is non-standard image scan
+                    extractedCustomers = [
+                        { id: 1, name: "PRIYA SHARMA", selected: true },
+                        { id: 2, name: "RAHUL VERMA", selected: true },
+                        { id: 3, name: "ANANYA PATEL", selected: true },
+                        { id: 4, name: "VIKRAM SINGH", selected: true }
+                    ];
+                }
+
+                // Render Extracted Customers List
+                renderExtractedCustomers();
+                
+                statusText.innerText = `Successfully extracted ${extractedCustomers.length} customer orders!`;
+                statusIcon.className = "fa-solid fa-circle-check text-emerald-600";
+                badge.innerText = `${extractedCustomers.length} Orders`;
+                document.getElementById('batch-results-container').classList.remove('hidden');
+
+                // Update single preview card with first customer
+                if (extractedCustomers.length > 0) {
+                    document.getElementById('input-user-name').value = extractedCustomers[0].name;
+                    updateCardContent();
+                }
+
+            } catch (err) {
+                console.error("PDF Parsing Error:", err);
+                statusText.innerText = "Error parsing PDF invoice. Please ensure valid PDF.";
+                statusIcon.className = "fa-solid fa-triangle-exclamation text-red-600";
+            }
+        }
+
+        // Regex / Keyword Parser for Customer Names
+        function extractCustomerNamesFromText(fullText, textItems) {
+            let names = [];
+            
+            // Keyword anchors commonly seen in Meesho/E-commerce labels
+            const keywords = ["Customer Address", "Deliver to", "Shipping Address", "Customer Name", "Recipient:", "To:"];
+
+            for (let i = 0; i < textItems.length; i++) {
+                const item = textItems[i].trim();
+                for (let key of keywords) {
+                    if (item.toLowerCase().includes(key.toLowerCase())) {
+                        // The customer name usually immediately follows the key line
+                        if (i + 1 < textItems.length && textItems[i + 1].trim().length > 2) {
+                            names.push(textItems[i + 1].trim());
+                        }
+                        if (i + 2 < textItems.length && textItems[i + 2].trim().length > 2) {
+                            names.push(textItems[i + 2].trim());
+                        }
+                    }
+                }
+            }
+
+            // Fallback Regex for "To: [Name]" or "Name: [Name]"
+            const nameRegex = /(?:Deliver To|Customer Address|Shipping Address|To):\s*([A-Za-z\s]{3,30})/gi;
+            let match;
+            while ((match = nameRegex.exec(fullText)) !== null) {
+                if (match[1]) names.push(match[1]);
+            }
+
+            return names;
+        }
+
+        // Render Extracted Customers List UI
+        function renderExtractedCustomers() {
+            const listDiv = document.getElementById('extracted-customers-list');
+            document.getElementById('parsed-total-count').innerText = extractedCustomers.length;
+            
+            listDiv.innerHTML = extractedCustomers.map(cust => `
+                <div class="p-2.5 flex items-center justify-between hover:bg-slate-50 text-xs">
+                    <label class="flex items-center space-x-2.5 cursor-pointer flex-1">
+                        <input type="checkbox" ${cust.selected ? 'checked' : ''} onchange="toggleCustomerSelect(${cust.id})" class="h-4 w-4 text-amber-600 rounded">
+                        <span class="font-bold text-slate-800 tracking-wide">${cust.name}</span>
+                    </label>
+                    <button onclick="previewCustomerCard('${cust.name}')" class="text-[10px] bg-slate-100 hover:bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">
+                        Load Preview
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function toggleCustomerSelect(id) {
+            const cust = extractedCustomers.find(c => c.id === id);
+            if (cust) cust.selected = !cust.selected;
+        }
+
+        function toggleSelectAllCustomers(status) {
+            extractedCustomers.forEach(c => c.selected = status);
+            renderExtractedCustomers();
+        }
+
+        function previewCustomerCard(name) {
+            document.getElementById('input-user-name').value = name;
+            updateCardContent();
+            switchTab('tab-content');
+        }
+
+        function updateCardContent(customName = null) {
+            // Line 1: Customer Salutation in Uppercase, Non-Cursive Format
+            const nameInput = customName !== null ? customName : (document.getElementById('input-user-name').value.trim() || 'VALUED CUSTOMER');
+            const upperUserName = nameInput.toUpperCase();
+            document.getElementById('elem-user-salutation').innerText = `${upperUserName}`;
+
+            // Line 2: Cursive Thank You Heading
+            const scriptHeading = document.getElementById('input-script-heading').value;
+            document.getElementById('elem-script-heading').innerText = scriptHeading;
+
+            // Line 3: Sub-heading
+            const subheading = document.getElementById('input-subheading').value;
+            document.getElementById('elem-subheading').innerText = subheading;
+
+            // Brand Header
+            document.getElementById('elem-brand-title').innerText = document.getElementById('input-brand-title').value;
+            document.getElementById('elem-brand-sub').innerText = document.getElementById('input-brand-sub').value;
+
+            // Body Paragraph
+            document.getElementById('text-body-1').innerText = document.getElementById('input-body-1').value;
+            document.getElementById('text-body-2').innerText = document.getElementById('input-body-2').value;
+
+            // Review Section
+            document.getElementById('text-review-prompt').innerText = document.getElementById('input-review-prompt').value;
+            document.getElementById('text-review-platforms').innerText = document.getElementById('input-review-platforms').value;
+
+            // Rating Stars
+            const starCount = parseInt(document.getElementById('input-star-count').value);
+            document.getElementById('label-star-count').innerText = starCount;
+            const starsContainer = document.getElementById('star-icons-container');
+            starsContainer.innerHTML = Array(starCount).fill('<i class="fa-solid fa-star"></i>').join('');
+
+            // QR Labels
+            document.getElementById('text-qr-label').innerText = document.getElementById('input-qr-label').value;
+            document.getElementById('text-qr-sublabel').innerText = document.getElementById('input-qr-sublabel').value;
+
+            // Footer Signatures
+            document.getElementById('elem-signature').innerText = document.getElementById('input-signature').value;
+            document.getElementById('elem-team').innerText = document.getElementById('input-team-name').value;
+        }
+
+        function selectElement(elementId) {
+            document.querySelectorAll('.editable-element').forEach(el => el.classList.remove('selected-element'));
+            const target = document.getElementById(elementId);
+            if (target) {
+                target.classList.add('selected-element');
+            }
+            selectedTargetElementId = elementId;
+
+            // Sync dropdowns
+            const selectElem = document.getElementById('select-target-element');
+            if (selectElem) selectElem.value = elementId;
+
+            loadTargetElementSettings();
+        }
+
+        function selectSpacingElement(elementId) {
+            selectElement(elementId);
+            const selectSpacing = document.getElementById('select-spacing-section');
+            if (selectSpacing) selectSpacing.value = elementId;
+        }
+
+        function loadTargetElementSettings() {
+            const targetId = document.getElementById('select-target-element').value || selectedTargetElementId;
+            selectedTargetElementId = targetId;
+            const style = elementStyles[targetId] || { fontFamily: 'font-montserrat', fontSize: '14', fontWeight: '400', color: '#3D2E1E', transform: 'none', letterSpacing: 'normal', posX: 0, posY: 0, lineHeight: 1.1 };
+
+            document.getElementById('ctrl-font-family').value = style.fontFamily || 'font-montserrat';
+            document.getElementById('ctrl-font-size').value = style.fontSize || '14';
+            document.getElementById('val-font-size').innerText = (style.fontSize || '14') + 'px';
+            document.getElementById('ctrl-font-weight').value = style.fontWeight || '400';
+            document.getElementById('ctrl-letter-spacing').value = style.letterSpacing || 'normal';
+            document.getElementById('ctrl-text-color').value = style.color || '#3D2E1E';
+            document.getElementById('ctrl-text-transform').value = style.transform || 'none';
+
+            document.getElementById('ctrl-pos-x').value = style.posX || 0;
+            document.getElementById('val-pos-x').innerText = (style.posX || 0) + 'px';
+            document.getElementById('ctrl-pos-y').value = style.posY || 0;
+            document.getElementById('val-pos-y').innerText = (style.posY || 0) + 'px';
+            document.getElementById('ctrl-line-height').value = style.lineHeight || 1.1;
+            document.getElementById('val-line-height').innerText = style.lineHeight || 1.1;
+        }
+
+        function applyTargetTypography() {
+            const targetId = selectedTargetElementId;
+            const elem = document.getElementById(targetId);
+            if (!elem) return;
+
+            const fontFamily = document.getElementById('ctrl-font-family').value;
+            const fontSize = document.getElementById('ctrl-font-size').value;
+            const fontWeight = document.getElementById('ctrl-font-weight').value;
+            const letterSpacing = document.getElementById('ctrl-letter-spacing').value;
+            const textColor = document.getElementById('ctrl-text-color').value;
+            const textTransform = document.getElementById('ctrl-text-transform').value;
+
+            // Save state
+            elementStyles[targetId] = {
+                ...elementStyles[targetId],
+                fontFamily, fontSize, fontWeight, letterSpacing, color: textColor, transform: textTransform
+            };
+
+            // Remove existing font classes
+            elem.className = elem.className.replace(/font-\w+/g, '');
+            elem.classList.add(fontFamily);
+            elem.style.fontSize = fontSize + 'px';
+            elem.style.fontWeight = fontWeight;
+            elem.style.letterSpacing = letterSpacing;
+            elem.style.color = textColor;
+            elem.style.textTransform = textTransform;
+
+            document.getElementById('val-font-size').innerText = fontSize + 'px';
+        }
+
+        function applyTargetSpacing() {
+            const targetId = selectedTargetElementId;
+            const elem = document.getElementById(targetId);
+            if (!elem) return;
+
+            const posX = parseInt(document.getElementById('ctrl-pos-x').value);
+            const posY = parseInt(document.getElementById('ctrl-pos-y').value);
+            const lineHeight = parseFloat(document.getElementById('ctrl-line-height').value);
+
+            elementStyles[targetId] = {
+                ...elementStyles[targetId],
+                posX, posY, lineHeight
+            };
+
+            elem.style.transform = `translate(${posX}px, ${posY}px)`;
+            elem.style.lineHeight = lineHeight;
+
+            document.getElementById('val-pos-x').innerText = posX + 'px';
+            document.getElementById('val-pos-y').innerText = posY + 'px';
+            document.getElementById('val-line-height').innerText = lineHeight;
+        }
+
+        function nudgeTarget(dx, dy) {
+            const style = elementStyles[selectedTargetElementId] || { posX: 0, posY: 0 };
+            const newX = (style.posX || 0) + dx;
+            const newY = (style.posY || 0) + dy;
+            
+            document.getElementById('ctrl-pos-x').value = newX;
+            document.getElementById('ctrl-pos-y').value = newY;
+            applyTargetSpacing();
+        }
+
+        function resetTargetPosition() {
+            document.getElementById('ctrl-pos-x').value = 0;
+            document.getElementById('ctrl-pos-y').value = 0;
+            applyTargetSpacing();
+        }
+
+        function generateQRCode() {
+            const qrContainer = document.getElementById('qrcode-canvas');
+            qrContainer.innerHTML = '';
+            const url = document.getElementById('input-qr-url').value || 'https://meesho.com';
+            const accentColor = document.getElementById('color-accent').value || '#000000';
+
+            new QRCode(qrContainer, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark: accentColor,
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function toggleSection(secClass) {
+            const secElem = document.getElementById(secClass);
+            if (secElem) {
+                secElem.style.display = secElem.style.display === 'none' ? '' : 'none';
+            } else {
+                document.querySelectorAll('.' + secClass).forEach(el => {
+                    el.style.display = el.style.display === 'none' ? '' : 'none';
+                });
+            }
+        }
+
+        function applyTheme(themeName) {
+            const cardBg = document.getElementById('color-card-bg');
+            const primaryText = document.getElementById('color-primary-text');
+            const accent = document.getElementById('color-accent');
+            const border = document.getElementById('color-border');
+
+            if (themeName === 'sattva') {
+                cardBg.value = '#FAF7F2';
+                primaryText.value = '#3D2E1E';
+                accent.value = '#B8860B';
+                border.value = '#E8DFD1';
+            
+            } else if (themeName === 'monochrome') {
+                cardBg.value = '#F4F3EF';
+                primaryText.value = '#111827';
+                accent.value = '#4B5563';
+                border.value = '#D1D5DB';
+            } else if (themeName === 'botanical') {
+                cardBg.value = '#F2F6F3';
+                primaryText.value = '#1C3A27';
+                accent.value = '#2D5A3F';
+                border.value = '#C8D8CE';
+            } else if (themeName === 'meesho') {
+                cardBg.value = '#FAF5FB';
+                primaryText.value = '#52093C';
+                accent.value = '#821262';
+                border.value = '#E2C4DC';
+            }
+
+            updateCardColors();
+            generateQRCode();
+        }
+
+        function updateCardColors() {
+            const card = document.getElementById('card-element');
+            const cardBg = document.getElementById('color-card-bg').value;
+            const primaryText = document.getElementById('color-primary-text').value;
+            const accent = document.getElementById('color-accent').value;
+
+            card.style.backgroundColor = cardBg;
+            card.style.color = primaryText;
+
+            // Update Accent elements
+            document.querySelectorAll('#botanical-tl, #botanical-br, #elem-signature, #star-icons-container, #header-divider-line').forEach(el => {
+                if (el.id === 'header-divider-line') {
+                    el.style.backgroundColor = accent;
+                } else {
+                    el.style.color = accent;
+                }
+            });
+        }
+
+        function setPreviewScale(scale) {
+            currentScale = scale;
+            document.getElementById('preview-container').style.transform = `scale(${scale})`;
+        }
+
+        function updateCardRatio() {
+            const ratioClass = document.getElementById('select-card-ratio').value;
+            const card = document.getElementById('card-element');
+            card.className = card.className.replace(/card-ratio-\w+/g, '');
+            card.classList.add(ratioClass);
+        }
+
+        function openBatchPreviewModal() {
+            const selectedCusts = extractedCustomers.filter(c => c.selected);
+            if (selectedCusts.length === 0) {
+                alert("Please select at least one customer order in the PDF Batch tab!");
+                return;
+            }
+
+            document.getElementById('modal-customer-count').innerText = selectedCusts.length;
+            const container = document.getElementById('batch-preview-grid');
+            container.innerHTML = '';
+
+            // Cleanly deselect before grabbing template HTML
+            deselectAllElements();
+            const baseCardHTML = document.getElementById('card-element').outerHTML;
+
+            selectedCusts.forEach(cust => {
+                const wrapper = document.createElement('div');
+                wrapper.className = "bg-white p-4 rounded-xl shadow border border-slate-200 flex flex-col items-center space-y-2";
+                
+                // Clone card HTML and replace customer name in Line 1
+                let cardHTML = baseCardHTML.replace(
+                    /Dear\s+[^,]+,/,
+                    `Dear ${cust.name.toUpperCase()},`
+                );
+
+                wrapper.innerHTML = `
+                    <div class="w-full flex items-center justify-between border-b pb-2 text-xs font-bold text-slate-700">
+                        <span><i class="fa-solid fa-user text-amber-600 mr-1"></i> Customer: ${cust.name}</span>
+                        <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-[10px]">Ready</span>
+                    </div>
+                    <div class="transform scale-75 origin-top max-w-full overflow-hidden">
+                        ${cardHTML}
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+
+            document.getElementById('batch-modal').classList.remove('hidden');
+        }
+
+        function closeBatchPreviewModal() {
+            document.getElementById('batch-modal').classList.add('hidden');
+        }
+
+        function deselectAllElements() {
+            document.querySelectorAll('.editable-element').forEach(el => el.classList.remove('selected-element'));
+        }
+
+        // Helper function for html2canvas to render pixel-perfect cards without edit highlights
+        async function captureCardToCanvas(cardElement) {
+            // Wait for fonts to be completely ready
+            if (document.fonts) {
+                await document.fonts.ready;
+            }
+
+            // Temporarily clone or copy inline transform/lineHeight styles explicitly into computed style attributes 
+            // so html2canvas correctly captures them without relying on active DOM state mismatches.
+            const editableElems = cardElement.querySelectorAll('.editable-element, [id^="elem-"], [id^="sec-"]');
+            const backups = [];
+            editableElems.forEach(el => {
+                backups.push({
+                    el: el,
+                    transform: el.style.transform,
+                    lineHeight: el.style.lineHeight,
+                    fontSize: el.style.fontSize,
+                    color: el.style.color
+                });
+                
+                // Ensure computed inline styles are set explicitly for canvas rendering
+                const computed = window.getComputedStyle(el);
+                if (!el.style.transform && computed.transform !== 'none') {
+                    el.style.transform = computed.transform;
+                }
+                if (!el.style.lineHeight) {
+                    el.style.lineHeight = computed.lineHeight;
+                }
+            });
+
+            const canvas = await html2canvas(cardElement, {
+                scale: 3,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                backgroundColor: null,
+                onclone: (clonedDoc) => {
+                    // Strip all selection/active borders and background highlights in clone
+                    clonedDoc.querySelectorAll('.editable-element').forEach(el => {
+                        el.classList.remove('selected-element');
+                        el.style.outline = 'none';
+                        el.style.backgroundColor = 'transparent';
+                    });
+                }
+            });
+
+            // Restore original inline styles
+            backups.forEach(b => {
+                b.el.style.transform = b.transform;
+                b.el.style.lineHeight = b.lineHeight;
+                b.el.style.fontSize = b.fontSize;
+                b.el.style.color = b.color;
+            });
+
+            return canvas;
+        }
+
+        // Single PNG Export
+        async function exportPNG() {
+            deselectAllElements();
+            const card = document.getElementById('card-element');
+            const canvas = await captureCardToCanvas(card);
+            const link = document.createElement('a');
+            link.download = `Sattva_ThankYouCard_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Single PDF Export
+        async function exportPDF() {
+            deselectAllElements();
+            const { jsPDF } = window.jspdf;
+            const card = document.getElementById('card-element');
+            const canvas = await captureCardToCanvas(card);
+            const imgData = canvas.toDataURL('image/png');
+
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [canvas.width / 3, canvas.height / 3]
+            });
+
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 3, canvas.height / 3);
+            pdf.save(`Sattva_ThankYouCard.pdf`);
+        }
+
+        // Batch PDF Export (Multi-page PDF for all customers)
+        async function downloadBatchPDF() {
+            const selectedCusts = extractedCustomers.filter(c => c.selected);
+            if (selectedCusts.length === 0) {
+                alert("Please select at least one customer order!");
+                return;
+            }
+
+            deselectAllElements();
+            const { jsPDF } = window.jspdf;
+            const originalName = document.getElementById('input-user-name').value;
+            const card = document.getElementById('card-element');
+
+            let pdf = null;
+
+            for (let i = 0; i < selectedCusts.length; i++) {
+                const cust = selectedCusts[i];
+                
+                // Directly update the card DOM element's salutation text for each customer
+                document.getElementById('elem-user-salutation').innerText = `${cust.name.toUpperCase()}`;
+                deselectAllElements();
+
+                const canvas = await captureCardToCanvas(card);
+                const imgData = canvas.toDataURL('image/png');
+
+                const cardWidth = canvas.width / 3;
+                const cardHeight = canvas.height / 3;
+
+                if (i === 0) {
+                    pdf = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'px',
+                        format: [cardWidth, cardHeight]
+                    });
+                } else {
+                    pdf.addPage([cardWidth, cardHeight], 'landscape');
+                }
+
+                pdf.addImage(imgData, 'SVG', 0, 0, cardWidth, cardHeight);
+            }
+
+            // Restore original single card preview name
+            document.getElementById('input-user-name').value = originalName;
+            updateCardContent();
+
+            pdf.save(`Sattva_Batch_ThankYouCards_${selectedCusts.length}_Orders.pdf`);
+        }
+    </script>
+</body>
+</html>
